@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Marea">
+  <defs>
+    <linearGradient id="sea" x1="20" y1="34" x2="105" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#75F0D5"/>
+      <stop offset="1" stop-color="#24BFAE"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="32" fill="#102A38"/>
+  <path d="M19 58c15-20 30-20 45 0s30 20 45 0" fill="none" stroke="url(#sea)" stroke-linecap="round" stroke-width="10"/>
+  <path d="M22 79c13-12 26-12 39 0s26 12 39 0" fill="none" stroke="#F5C77A" stroke-linecap="round" stroke-width="7"/>
+  <path d="M27 96c11-8 21-8 32 0s21 8 32 0" fill="none" stroke="#B9F7E9" stroke-linecap="round" stroke-width="5" opacity=".86"/>
+</svg>

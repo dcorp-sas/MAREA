@@ -1,0 +1,4 @@
+{$MAREA_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy marea:8080
+}

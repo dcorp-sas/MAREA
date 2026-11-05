@@ -1,0 +1,85 @@
+services:
+  marea:
+    build:
+      context: ../..
+      dockerfile: deploy/marea/Dockerfile
+    restart: unless-stopped
+    env_file: ../../.env
+    environment:
+      OPENPOST_APP_URL: https://${MAREA_DOMAIN}
+      OPENPOST_FRONTEND_URL: https://${MAREA_DOMAIN}
+      OPENPOST_JWT_SECRET: ${OPENPOST_JWT_SECRET:?Define OPENPOST_JWT_SECRET en .env}
+      OPENPOST_ENCRYPTION_KEY: ${OPENPOST_ENCRYPTION_KEY:?Define OPENPOST_ENCRYPTION_KEY en .env}
+      OPENPOST_WORKFLOWS_AI_ENABLED: ${OPENPOST_WORKFLOWS_AI_ENABLED:-false}
+      OPENPOST_DISABLE_REGISTRATIONS: ${OPENPOST_DISABLE_REGISTRATIONS:-false}
+      OPENPOST_DIAGNOSTICS_ENABLED: ${OPENPOST_DIAGNOSTICS_ENABLED:-false}
+      OPENPOST_PUBLIC_PROFILES_ENABLED: ${OPENPOST_PUBLIC_PROFILES_ENABLED:-false}
+      OPENROUTER_API_KEY: local-only
+      OPENPOST_AI_BASE_URL: http://marea-llm:8081/v1
+      OPENPOST_TEXT_GENERATION_MODEL: marea
+      OPENPOST_IMAGE_CAPTION_MODEL: marea
+      OPENPOST_EDITOR_AGENT_MODEL: marea
+      OPENPOST_WORKFLOW_DECISION_MODEL: marea
+      OPENPOST_MEME_GENERATION_MODEL: marea
+      MAREA_COMFYUI_BASE_URL: http://marea-comfyui:8188
+      MAREA_COMFYUI_CHECKPOINT: ${MAREA_COMFYUI_CHECKPOINT:-sd_xl_base_1.0.safetensors}
+    volumes:
+      - marea-data:/data
+    depends_on:
+      marea-llm:
+        condition: service_started
+      marea-comfyui:
+        condition: service_started
+    networks: [private]
+
+  marea-llm:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    restart: unless-stopped
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8081"
+      - --model
+      - /models/${MAREA_LLM_MODEL:-Qwen2.5-3B-Instruct-Q4_K_M.gguf}
+      - --alias
+      - marea
+      - --ctx-size
+      - "4096"
+    volumes:
+      - ../../models/llm:/models:ro
+    networks: [private]
+
+  marea-comfyui:
+    image: ghcr.io/ai-dock/comfyui:v2-cpu-22.04-v0.2.7
+    restart: unless-stopped
+    environment:
+      WEB_ENABLE_AUTH: "false"
+      COMFYUI_ARGS: --listen 0.0.0.0 --port 8188
+    volumes:
+      - ../../models/comfyui:/workspace/ComfyUI/models:ro
+    networks: [private]
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      MAREA_DOMAIN: ${MAREA_DOMAIN:?Define MAREA_DOMAIN en .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [marea]
+    networks: [private]
+
+volumes:
+  marea-data:
+  caddy-data:
+  caddy-config:
+
+networks:
+  private:
